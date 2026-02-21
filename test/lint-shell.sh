@@ -12,7 +12,10 @@ if ! command -v shellcheck >/dev/null 2>&1; then
     exit 127
 fi
 
-mapfile -t shell_files < <(find . -type f -name '*.sh' | sort || true) 
+# Globbing instead of find
+shopt -s globstar nullglob
+shell_files=(./**/*.sh)
+shopt -u globstar nullglob
 
 if (( ${#shell_files[@]} == 0 )); then
     printf 'No shell files found.\n'
