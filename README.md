@@ -15,20 +15,6 @@ This repository is where I keep small, practical Bash patterns I want to reuse a
 └── test/          # Tests and validation scripts
 ```
 
-## Example
-
-### `var_upper_to`
-
-File: `snippets/variables/printf_v_for_efficient_return.sh`
-
-Converts an input string to uppercase and writes directly to an output variable name using `printf -v`.
-
-Why this pattern is useful:
-
-- avoids command substitution overhead
-- avoids subshells/pipelines for simple transformations
-- validates variable names before assignment
-
 ## Contributing
 
 Suggestions and better ideas are welcome.
