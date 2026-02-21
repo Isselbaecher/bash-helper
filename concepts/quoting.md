@@ -7,9 +7,9 @@ Quoting is one of the most important Bash safety topics.
 Quote variables by default.
 
 ```bash
-rm -- "$file"
-cp -- "$src" "$dst"
-printf '%s\n' "$value"
+rm -- "${file}"
+cp -- "${src}" "${dst}"
+printf '%s\n' "${value}"
 ```
 
 ## Types of Quotes
@@ -25,22 +25,22 @@ printf '%s\n' "$value"
 - Use `--` before user-controlled paths for many tools.
 
 ```bash
-cmd=(grep -F -- "$needle" "$file")
+cmd=(grep -F -- "${needle}" "${file}")
 "${cmd[@]}"
 ```
 
 ## Common Mistakes
 
 - `for f in $(ls)` (breaks on spaces/newlines).
-- `echo $var` (word splitting/glob surprises).
+- `echo ${var}` (word splitting/glob surprises).
 - Unquoted paths in `rm`, `mv`, `cp`.
 
 Preferred:
 
 ```bash
 while IFS= read -r line; do
-	printf '%s\n' "$line"
-done < "$input_file"
+	printf '%s\n' "${line}"
+done < "${input_file}"
 ```
 
 ## Performance Notes

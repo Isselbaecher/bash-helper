@@ -1,5 +1,6 @@
+##################################################
 # Bash 4.x section timer with fixed-width output:
-# name (15 chars, left) seconds (3 chars, right) milliseconds (5 chars, right)
+# name (15 chars, left) seconds (4 chars, right) milliseconds (5 chars, right)
 #
 # Runtime control:
 #   BASH_HELPER_PERF_LEVEL=0  -> disabled
@@ -18,7 +19,10 @@
 #   perf_measure "command2_name"
 #   command2
 #   perf_measure
-
+# Output:
+#   command1_name ->  0s 123ms
+#   command2_name ->  1s   5ms
+##################################################
 perf_measure_reset() {
     # Global state used by perf_measure between calls.
     # Reset allows clean timing sessions in long-lived shells.
@@ -30,7 +34,7 @@ perf_measure_reset() {
 perf_measure() {
     # Read feature flag from environment; default is enabled.
     local perf_level="${BASH_HELPER_PERF_LEVEL-1}"
-    [[ "$perf_level" =~ ^-?[0-9]+$ ]] || perf_level=1
+    [[ "${perf_level}" =~ ^-?[0-9]+$ ]] || perf_level=1
     # Fast no-op path when profiling is disabled.
     (( perf_level > 0 )) || return 0
 
@@ -57,7 +61,7 @@ perf_measure() {
         # Convert seconds + microseconds to nanoseconds.
         now_ns=$(( epoch_sec * 1000000000 + 10#${epoch_micro} * 1000 ))
     # Fallback: GNU date nanoseconds.
-    elif now_ns="$(date +%s%N 2>/dev/null)" && [[ "$now_ns" =~ ^[0-9]+$ ]]; then
+    elif now_ns="$(date +%s%N 2>/dev/null)" && [[ "${now_ns}" =~ ^[0-9]+$ ]]; then
         :
     # Last resort: second precision converted to nanoseconds.
     else
@@ -79,7 +83,7 @@ perf_measure() {
         elapsed_sec=$(( elapsed_ms / 1000 ))
         elapsed_millis=$(( elapsed_ms % 1000 ))
 
-        # Name: truncate to 15 chars; Seconds: 3 wide; Milliseconds: 5 wide
+        # Name: truncate to 15 chars; Seconds: 4 wide; Milliseconds: 5 wide
         printf '%-15.15s -> %4ds%5dms\n' "${_bh_perf_last_label}" "${elapsed_sec}" "${elapsed_millis}"
     fi
 

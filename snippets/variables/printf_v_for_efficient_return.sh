@@ -9,8 +9,8 @@ var_to_X_to() {
     local input="$2"
 
     # Always validate
-    [[ $out_varname =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
-        printf 'var_to_X_to: invalid variable name: %q\n' "$out_varname" >&2
+    [[ ${out_varname} =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
+        printf 'var_to_X_to: invalid variable name: %q\n' "${out_varname}" >&2
         return 2
     }
 
@@ -19,7 +19,7 @@ var_to_X_to() {
     result="..."
 
     # Assign without command substitution
-    printf -v "$out_varname" '%s' "$result"
+    printf -v "${out_varname}" '%s' "${result}"
 }
 
 ##################################################
@@ -38,8 +38,8 @@ var_to_upper_to() {
     local input="$2"
 
     # Always validate
-    [[ $out_varname =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
-        printf 'var_to_upper_to: invalid variable name: %q\n' "$out_varname" >&2
+    [[ ${out_varname} =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
+        printf 'var_to_upper_to: invalid variable name: %q\n' "${out_varname}" >&2
         return 2
     }
 
@@ -48,5 +48,5 @@ var_to_upper_to() {
     # Note: ${var^^} is a Bash 4.0+ feature for uppercase conversion
     # For one-off calls, command substitution is usually fine
     # For hot paths (many calls), this avoids extra process overhead
-    printf -v "$out_varname" '%s' "${input^^}"
+    printf -v "${out_varname}" '%s' "${input^^}"
 }

@@ -16,8 +16,8 @@ tmp_dir="$(mktemp -d)"
 
 cleanup() {
 	local rc=$?
-	rm -rf -- "$tmp_dir"
-	exit "$rc"
+	rm -rf -- "${tmp_dir}"
+	exit "${rc}"
 }
 
 trap cleanup EXIT INT TERM
@@ -31,20 +31,20 @@ Use one per-script temp directory, then create predictable per-iteration files i
 ```bash
 # One-time unique workspace (single mktemp call)
 tmp_root="${TMPDIR:-/tmp}/mytool.$$.${RANDOM}"
-mkdir -p -- "$tmp_root" || exit 1
+mkdir -p -- "${tmp_root}" || exit 1
 
 cleanup() {
 	local rc=$?
-	rm -rf -- "$tmp_root"
-	exit "$rc"
+	rm -rf -- "${tmp_root}"
+	exit "${rc}"
 }
 
 trap cleanup EXIT INT TERM
 
 for i in "${items[@]}"; do
-	tmp_file="$tmp_root/work.$i.tmp"
-	: > "$tmp_file" || exit 1
-	# ... use "$tmp_file" ...
+	tmp_file="${tmp_root}/work.${i}.tmp"
+	: > "${tmp_file}" || exit 1
+	# ... use "${tmp_file}" ...
 done
 ```
 

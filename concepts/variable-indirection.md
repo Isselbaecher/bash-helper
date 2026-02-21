@@ -13,8 +13,8 @@ Variable indirection means using one variable name to read/write another variabl
 Always validate target variable names before indirection:
 
 ```bash
-[[ $out_var =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
-	printf 'invalid variable name: %q\n' "$out_var" >&2
+[[ ${out_var} =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
+	printf 'invalid variable name: %q\n' "${out_var}" >&2
 	return 2
 }
 ```
@@ -26,8 +26,8 @@ to_upper_to() {
 	local out_var="$1"
 	local input="$2"
 
-	[[ $out_var =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || return 2
-	printf -v "$out_var" '%s' "${input^^}"
+	[[ ${out_var} =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || return 2
+	printf -v "${out_var}" '%s' "${input^^}"
 }
 ```
 
@@ -37,8 +37,8 @@ to_upper_to() {
 append_suffix() {
 	local target_name="$1"
 	local suffix="$2"
-	local -n target_ref="$target_name"
-	target_ref+="$suffix"
+	local -n target_ref="${target_name}"
+	target_ref+="${suffix}"
 }
 ```
 

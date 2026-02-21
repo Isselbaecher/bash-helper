@@ -14,8 +14,8 @@ Runs in the same process:
 count=0
 while IFS= read -r _; do
 	((count++))
-done < "$file"
-printf '%d\n' "$count"   # value persists
+done < "${file}"
+printf '%d\n' "${count}"   # value persists
 ```
 
 ## Subshell
@@ -24,10 +24,10 @@ Runs in a child process. State changes do not come back.
 
 ```bash
 count=0
-cat "$file" | while IFS= read -r _; do
+cat "${file}" | while IFS= read -r _; do
 	((count++))
 done
-printf '%d\n' "$count"   # often still 0
+printf '%d\n' "${count}"   # often still 0
 ```
 
 ## Safe Guidelines

@@ -34,12 +34,12 @@ do_work() {
 	}
 
 	local path="$1"
-	[[ -e "$path" ]] || {
-		printf 'missing path: %s\n' "$path" >&2
+	[[ -e "${path}" ]] || {
+		printf 'missing path: %s\n' "${path}" >&2
 		return 10
 	}
 
-	cp -- "$path" /tmp/ || return 1
+	cp -- "${path}" /tmp/ || return 1
 	return 0
 }
 ```
@@ -48,7 +48,7 @@ do_work() {
 
 - Print errors to stderr (`>&2`).
 - Keep messages actionable (what failed and which input).
-- In scripts, propagate failures: `do_work "$x" || exit $?`.
+- In scripts, propagate failures: `do_work "${x}" || exit $?`.
 
 ## Performance Notes
 
