@@ -1,4 +1,14 @@
 ##################################################
+# Dependency
+##################################################
+
+if ! declare -F bh_val_out_varname >/dev/null 2>&1; then
+    _bh_string_lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    # shellcheck disable=SC1091
+    source "${_bh_string_lib_dir}/validation.sh"
+fi
+
+##################################################
 # str_escape_html_to <out_varname> <input>
 #
 # Escapes a string for HTML output and writes the result
@@ -25,10 +35,7 @@ str_escape_html_to() {
     local input="$2"
 
     # Validate variable name before using it with printf -v.
-    [[ ${out_varname} =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
-        printf 'str_escape_html_to: invalid variable name: %q\n' "${out_varname}" >&2
-        return 2
-    }
+    bh_val_out_varname "${out_varname}" 'str_escape_html_to' || return
 
     # Work on a local copy to keep input immutable.
     local result="${input}"
