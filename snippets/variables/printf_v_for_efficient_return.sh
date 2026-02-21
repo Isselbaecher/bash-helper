@@ -1,13 +1,35 @@
-# var_upper_to <varname_out> <input>
-# Writes uppercase version of <input> into variable named by <varname_out>.
+# snippet: fn <out_varname> [args...]
+var_to_X_to() {
+    local __out_varname="$1"
+    local input="$2"
+
+    # Always validate
+    [[ $__out_varname =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
+        printf 'var_to_X_to: invalid variable name: %q\n' "$__out_varname" >&2
+        return 2
+    }
+
+    # Compute result into local var
+    local result
+    result="..."
+
+    # Assign without command substitution
+    printf -v "$__out" '%s' "$result"
+}
+
+##################################################
+### Example: uppercase conversion
+##################################################  
+# var_to_upper_to <out_varname> <input>
+# Writes uppercase version of <input> into variable named by <out_varname>.
 # Bash: 4.0+ (for ${var^^})
-var_upper_to() {
-    local __varname_out="$1"
+var_to_upper_to() {
+    local __out_varname="$1"
     local __input="$2"
 
     # Always validate
-    [[ $__varname_out =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
-        printf 'var_upper_to: invalid variable name: %q\n' "$__varname_out" >&2
+    [[ $__out_varname =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]] || {
+        printf 'var_to_upper_to: invalid variable name: %q\n' "$__out_varname" >&2
         return 2
     }
 
@@ -16,5 +38,5 @@ var_upper_to() {
     # Note: ${var^^} is a Bash 4.0+ feature for uppercase conversion
     # For one-off calls, command substitution is usually fine
     # For hot paths (many calls), this avoids extra process overhead
-    printf -v "$__varname_out" '%s' "${__input^^}"
+    printf -v "$__out_varname" '%s' "${__input^^}"
 }
