@@ -26,6 +26,19 @@ If you want to contribute, feel free to open a pull request with:
 - improvements to existing snippets
 - new snippets with short usage examples
 
+## Linting
+
+Run ShellCheck across all shell files:
+
+```bash
+bash test/lint-shell.sh
+```
+
+Notes:
+
+- Uses style-level checks (`--severity=style`, `--enable=all`).
+- On ShellCheck versions that support it, variable bracing style is reported as well.
+
 ## License
 
 See [LICENSE](LICENSE).

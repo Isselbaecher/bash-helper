@@ -1,0 +1,10 @@
+# Apply Bash rules for this repo.
+shell=bash
+
+# Include style guidance, not only hard errors.
+severity=style
+enable=all
+
+# Allow following sourced files relative to source script paths.
+external-sources=true
+source-path=SCRIPTDIR
