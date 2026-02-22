@@ -29,6 +29,21 @@ target_log_case_ms() {
         warn_emit:100) printf '%s' 26 ;;
         warn_emit:1000) printf '%s' 251 ;;
 
+        ok_or_warn_ok:1) printf '%s' 18 ;;
+        ok_or_warn_ok:10) printf '%s' 24 ;;
+        ok_or_warn_ok:100) printf '%s' 65 ;;
+        ok_or_warn_ok:1000) printf '%s' 420 ;;
+
+        ok_or_warn_fail:1) printf '%s' 4 ;;
+        ok_or_warn_fail:10) printf '%s' 8 ;;
+        ok_or_warn_fail:100) printf '%s' 45 ;;
+        ok_or_warn_fail:1000) printf '%s' 360 ;;
+
+        ok_or_exit_ok:1) printf '%s' 18 ;;
+        ok_or_exit_ok:10) printf '%s' 24 ;;
+        ok_or_exit_ok:100) printf '%s' 65 ;;
+        ok_or_exit_ok:1000) printf '%s' 420 ;;
+
         *)
             printf 'target_log_case_ms: no explicit target for %s (n=%s)\n' "${label}" "${iterations}" >&2
             return 2
@@ -62,6 +77,25 @@ run_log_bench_group() {
     perf_measure_to_report 'warn_emit' "${iterations}" "${target_ms}"
     for (( i = 0; i < iterations; i++ )); do
         log_warn "loop ${i}" 2>/dev/null
+    done
+
+    log_set_level INFO
+    target_ms="$(target_log_case_ms ok_or_warn_ok "${iterations}")"
+    perf_measure_to_report 'ok_or_warn_ok' "${iterations}" "${target_ms}"
+    for (( i = 0; i < iterations; i++ )); do
+        log_ok_or_warn 0 "loop ${i}" >/dev/null
+    done
+
+    target_ms="$(target_log_case_ms ok_or_warn_fail "${iterations}")"
+    perf_measure_to_report 'ok_or_warn_fail' "${iterations}" "${target_ms}"
+    for (( i = 0; i < iterations; i++ )); do
+        log_ok_or_warn 7 "loop ${i}" 2>/dev/null
+    done
+
+    target_ms="$(target_log_case_ms ok_or_exit_ok "${iterations}")"
+    perf_measure_to_report 'ok_or_exit_ok' "${iterations}" "${target_ms}"
+    for (( i = 0; i < iterations; i++ )); do
+        log_ok_or_exit 0 "loop ${i}" >/dev/null
     done
 
     perf_measure_to_report

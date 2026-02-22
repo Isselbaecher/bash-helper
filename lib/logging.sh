@@ -140,3 +140,57 @@ log_error() {
 	log_msg ERROR "${*}"
 }
 
+# log_ok_or_warn <exit_code> <message>
+# Logs INFO when exit_code is 0.
+# Logs WARN when exit_code is >0 and continues execution.
+# Returns:
+#   0 on success, 2 on usage/validation errors.
+log_ok_or_warn() {
+	if (( $# != 2 )); then
+		printf 'usage: log_ok_or_warn <exit_code> <message>\n' >&2
+		return 2
+	fi
+
+	local exit_code="${1}"
+	local message="${2}"
+
+	if [[ ! "${exit_code}" =~ ^[0-9]+$ ]]; then
+		printf 'log_ok_or_warn: exit_code must be a non-negative integer: %q\n' "${exit_code}" >&2
+		return 2
+	fi
+
+	if (( exit_code == 0 )); then
+		log_info "${message}"
+	else
+		log_warn "${message} (exit_code=${exit_code})"
+	fi
+}
+
+# log_ok_or_exit <exit_code> <message>
+# Logs INFO when exit_code is 0.
+# Logs ERROR and exits the whole script with exit_code when exit_code is >0.
+# Returns:
+#   0 on success, 2 on usage/validation errors.
+log_ok_or_exit() {
+	if (( $# != 2 )); then
+		printf 'usage: log_ok_or_exit <exit_code> <message>\n' >&2
+		return 2
+	fi
+
+	local exit_code="${1}"
+	local message="${2}"
+
+	if [[ ! "${exit_code}" =~ ^[0-9]+$ ]]; then
+		printf 'log_ok_or_exit: exit_code must be a non-negative integer: %q\n' "${exit_code}" >&2
+		return 2
+	fi
+
+	if (( exit_code == 0 )); then
+		log_info "${message}"
+		return 0
+	fi
+
+	log_error "${message} (exit_code=${exit_code})"
+	exit "${exit_code}"
+}
+
