@@ -52,28 +52,28 @@ str_escape_html_to() {
     # Escape core HTML characters first.
     # '&' must be first to avoid double-encoding entities introduced later.
     result="${result//&/&amp;}"
-    result="${result//</&lt;}"
-    result="${result//>/&gt;}"
-    result="${result//\"/&quot;}"
-    result="${result//\'/&apos;}"
+    result="${result//</\&lt;}"
+    result="${result//>/\&gt;}"
+    result="${result//\"/\&quot;}"
+    result="${result//\'/\&apos;}"
 
     # Named entities for German special characters.
-    result="${result//Ä/&Auml;}"
-    result="${result//ä/&auml;}"
-    result="${result//Ö/&Ouml;}"
-    result="${result//ö/&ouml;}"
-    result="${result//Ü/&Uuml;}"
-    result="${result//ü/&uuml;}"
-    result="${result//ß/&szlig;}"
+    result="${result//Ä/\&Auml;}"
+    result="${result//ä/\&auml;}"
+    result="${result//Ö/\&Ouml;}"
+    result="${result//ö/\&ouml;}"
+    result="${result//Ü/\&Uuml;}"
+    result="${result//ü/\&uuml;}"
+    result="${result//ß/\&szlig;}"
 
     # Additional named entities used in this project.
-    result="${result//©/&copy;}"
-    result="${result//€/&euro;}"
-    result="${result//¢/&cent;}"
-    result="${result//£/&pound;}"
-    result="${result//¥/&yen;}"
-    result="${result//®/&reg;}"
-    result="${result//™/&trade;}"
+    result="${result//©/\&copy;}"
+    result="${result//€/\&euro;}"
+    result="${result//¢/\&cent;}"
+    result="${result//£/\&pound;}"
+    result="${result//¥/\&yen;}"
+    result="${result//®/\&reg;}"
+    result="${result//™/\&trade;}"
 
     # Return via output variable (no command substitution).
     printf -v "${out_varname}" '%s' "${result}"
