@@ -4,9 +4,90 @@
 
 if ! declare -F bh_val_out_varname >/dev/null 2>&1; then
 	_bh_datetime_lib_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-	# shellcheck disable=SC1091
 	source "${_bh_datetime_lib_dir}/validation.sh"
 fi
+
+##################################################
+# Internal helpers
+##################################################
+
+# Caches to avoid repeated expensive datetime parsing/formatting.
+declare -gA _bh_dt_cache_dt_to_epoch=()
+declare -gA _bh_dt_cache_epoch_to_date=()
+declare -gA _bh_dt_cache_epoch_to_dt=()
+declare -g _bh_dt_today_cached=''
+
+##################################################
+# dt_cache_clear
+#
+# Clears datetime conversion caches.
+# Useful for long-lived shells or tests.
+##################################################
+dt_cache_clear() {
+	_bh_dt_cache_dt_to_epoch=()
+	_bh_dt_cache_epoch_to_dt=()
+	_bh_dt_cache_epoch_to_date=()
+	_bh_dt_today_cached=''
+}
+
+_bh_dt_cache_epoch_formats() {
+	if (( $# != 1 )); then
+		printf 'usage: _bh_dt_cache_epoch_formats <epoch_seconds>\n' >&2
+		return 2
+	fi
+
+	local epoch_seconds="${1}"
+	bh_val_int "${epoch_seconds}" 'epoch_seconds' || return
+
+	if [[ ! -v _bh_dt_cache_epoch_to_date["${epoch_seconds}"] ]]; then
+		printf -v _bh_dt_cache_epoch_to_date["${epoch_seconds}"] '%(%Y-%m-%d)T' "${epoch_seconds}"
+	fi
+
+	if [[ ! -v _bh_dt_cache_epoch_to_dt["${epoch_seconds}"] ]]; then
+		printf -v _bh_dt_cache_epoch_to_dt["${epoch_seconds}"] '%(%Y-%m-%d %H:%M:%S)T' "${epoch_seconds}"
+	fi
+}
+
+_bh_dt_today_date_to() {
+	if (( $# != 1 )); then
+		printf 'usage: _bh_dt_today_date_to <out_varname>\n' >&2
+		return 2
+	fi
+
+	local out_varname="${1}"
+	bh_val_out_varname "${out_varname}" '_bh_dt_today_date_to' || return
+
+	# Cache "today" once per shell session for high-frequency callers.
+	if [[ -z "${_bh_dt_today_cached}" ]]; then
+		printf -v _bh_dt_today_cached '%(%Y-%m-%d)T' -1
+	fi
+
+	printf -v "${out_varname}" '%s' "${_bh_dt_today_cached}"
+}
+
+_bh_dt_normalize_datetime_to() {
+	if (( $# != 2 )); then
+		printf 'usage: _bh_dt_normalize_datetime_to <out_varname> <dt_input>\n' >&2
+		return 2
+	fi
+
+	local out_varname="${1}"
+	local dt_input="${2}"
+	local dt_epoch dt_normalized_local
+
+	bh_val_out_varname "${out_varname}" '_bh_dt_normalize_datetime_to' || return
+
+	# Fast path: already normalized format.
+	if [[ ${dt_input} =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}[[:space:]][0-9]{2}:[0-9]{2}:[0-9]{2}$ ]]; then
+		printf -v "${out_varname}" '%s' "${dt_input}"
+		return 0
+	fi
+
+	dt_datetime_to_epoch_to dt_epoch "${dt_input}" || return 1
+	dt_epoch_to_datetime_to dt_normalized_local "${dt_epoch}" || return 1
+	printf -v "${out_varname}" '%s' "${dt_normalized_local}"
+	return 0
+}
 
 ##################################################
 # dt_epoch_ms_now_to <out_varname>
@@ -24,23 +105,23 @@ dt_epoch_ms_now_to() {
 	local out_varname="${1}"
 	bh_val_out_varname "${out_varname}" 'dt_epoch_ms_now_to' || return
 
-	local epoch_ms epoch_sec epoch_micro
+	local dt_now_epoch_ms dt_now_epoch_sec dt_now_epoch_micro
 
 	if [[ -n "${EPOCHREALTIME-}" ]]; then
-		epoch_sec="${EPOCHREALTIME%.*}"
-		epoch_micro="${EPOCHREALTIME#*.}"
-		epoch_micro="${epoch_micro:0:6}"
-		while (( ${#epoch_micro} < 6 )); do
-			epoch_micro+="0"
+		dt_now_epoch_sec="${EPOCHREALTIME%.*}"
+		dt_now_epoch_micro="${EPOCHREALTIME#*.}"
+		dt_now_epoch_micro="${dt_now_epoch_micro:0:6}"
+		while (( ${#dt_now_epoch_micro} < 6 )); do
+			dt_now_epoch_micro+="0"
 		done
-		epoch_ms=$(( epoch_sec * 1000 + 10#${epoch_micro} / 1000 ))
-	elif epoch_ms="$(date +%s%3N 2>/dev/null)" && [[ ${epoch_ms} =~ ^[0-9]+$ ]]; then
+		dt_now_epoch_ms=$(( dt_now_epoch_sec * 1000 + 10#${dt_now_epoch_micro} / 1000 ))
+	elif dt_now_epoch_ms="$(date +%s%3N 2>/dev/null)" && [[ ${dt_now_epoch_ms} =~ ^[0-9]+$ ]]; then
 		:
 	else
-		epoch_ms="$(( $(date +%s) * 1000 ))"
+		dt_now_epoch_ms="$(( $(date +%s) * 1000 ))"
 	fi
 
-	printf -v "${out_varname}" '%s' "${epoch_ms}"
+	printf -v "${out_varname}" '%s' "${dt_now_epoch_ms}"
 }
 
 ##################################################
@@ -66,7 +147,7 @@ dt_epoch_diff_human_to() {
 	local delta_ms sign
 	local days hours minutes seconds millis
 	local -a parts=()
-	local result
+	local dt_human_diff
 
 	delta_ms=$(( end_epoch_ms - start_epoch_ms ))
 	sign=''
@@ -94,13 +175,13 @@ dt_epoch_diff_human_to() {
 	(( millis > 0 )) && parts+=("${millis}ms")
 
 	if (( ${#parts[@]} == 0 )); then
-		result='0ms'
+		dt_human_diff='0ms'
 	else
 		local IFS=' '
-		result="${parts[*]}"
+		dt_human_diff="${parts[*]}"
 	fi
 
-	printf -v "${out_varname}" '%s' "${sign}${result}"
+	printf -v "${out_varname}" '%s' "${sign}${dt_human_diff}"
 }
 
 ##################################################
@@ -119,19 +200,28 @@ dt_datetime_to_epoch_to() {
 	local dt_input="${2}"
 	bh_val_out_varname "${out_varname}" 'dt_datetime_to_epoch_to' || return
 
-	local epoch
-	if epoch="$(date -d "${dt_input}" +%s 2>/dev/null)" && [[ ${epoch} =~ ^-?[0-9]+$ ]]; then
+	local dt_parsed_epoch
+
+	if [[ -v _bh_dt_cache_dt_to_epoch["${dt_input}"] ]]; then
+		printf -v "${out_varname}" '%s' "${_bh_dt_cache_dt_to_epoch["${dt_input}"]}"
+		return 0
+	fi
+
+	if dt_parsed_epoch="$(date -d "${dt_input}" +%s 2>/dev/null)" && [[ ${dt_parsed_epoch} =~ ^-?[0-9]+$ ]]; then
 		:
-	elif epoch="$(date -j -f '%Y-%m-%d %H:%M:%S' "${dt_input}" +%s 2>/dev/null)" && [[ ${epoch} =~ ^-?[0-9]+$ ]]; then
+	elif dt_parsed_epoch="$(date -j -f '%Y-%m-%d %H:%M:%S' "${dt_input}" +%s 2>/dev/null)" && [[ ${dt_parsed_epoch} =~ ^-?[0-9]+$ ]]; then
 		:
-	elif epoch="$(date -j -f '%Y-%m-%d' "${dt_input}" +%s 2>/dev/null)" && [[ ${epoch} =~ ^-?[0-9]+$ ]]; then
+	elif dt_parsed_epoch="$(date -j -f '%Y-%m-%d' "${dt_input}" +%s 2>/dev/null)" && [[ ${dt_parsed_epoch} =~ ^-?[0-9]+$ ]]; then
 		:
 	else
 		printf 'dt_datetime_to_epoch_to: cannot parse datetime: %q\n' "${dt_input}" >&2
 		return 1
 	fi
 
-	printf -v "${out_varname}" '%s' "${epoch}"
+	_bh_dt_cache_dt_to_epoch["${dt_input}"]="${dt_parsed_epoch}"
+	_bh_dt_cache_epoch_formats "${dt_parsed_epoch}" || return
+
+	printf -v "${out_varname}" '%s' "${dt_parsed_epoch}"
 }
 
 ##################################################
@@ -150,17 +240,9 @@ dt_epoch_to_date_to() {
 	bh_val_out_varname "${out_varname}" 'dt_epoch_to_date_to' || return
 	bh_val_int "${epoch_seconds}" 'epoch_seconds' || return
 
-	local result
-	if result="$(date -d "@${epoch_seconds}" +%F 2>/dev/null)"; then
-		:
-	elif result="$(date -r "${epoch_seconds}" +%F 2>/dev/null)"; then
-		:
-	else
-		printf 'dt_epoch_to_date_to: cannot convert epoch: %q\n' "${epoch_seconds}" >&2
-		return 1
-	fi
+	_bh_dt_cache_epoch_formats "${epoch_seconds}" || return
 
-	printf -v "${out_varname}" '%s' "${result}"
+	printf -v "${out_varname}" '%s' "${_bh_dt_cache_epoch_to_date["${epoch_seconds}"]}"
 }
 
 ##################################################
@@ -179,17 +261,9 @@ dt_epoch_to_datetime_to() {
 	bh_val_out_varname "${out_varname}" 'dt_epoch_to_datetime_to' || return
 	bh_val_int "${epoch_seconds}" 'epoch_seconds' || return
 
-	local result
-	if result="$(date -d "@${epoch_seconds}" '+%Y-%m-%d %H:%M:%S' 2>/dev/null)"; then
-		:
-	elif result="$(date -r "${epoch_seconds}" '+%Y-%m-%d %H:%M:%S' 2>/dev/null)"; then
-		:
-	else
-		printf 'dt_epoch_to_datetime_to: cannot convert epoch: %q\n' "${epoch_seconds}" >&2
-		return 1
-	fi
+	_bh_dt_cache_epoch_formats "${epoch_seconds}" || return
 
-	printf -v "${out_varname}" '%s' "${result}"
+	printf -v "${out_varname}" '%s' "${_bh_dt_cache_epoch_to_dt["${epoch_seconds}"]}"
 }
 
 ##################################################
@@ -208,16 +282,15 @@ dt_datetime_to_short_to() {
 	local dt_input="${2}"
 	bh_val_out_varname "${out_varname}" 'dt_datetime_to_short_to' || return
 
-	local epoch_seconds dt_normalized dt_today short
+	local dt_normalized dt_today dt_short
 
-	dt_datetime_to_epoch_to epoch_seconds "${dt_input}" || return 1
-	dt_epoch_to_datetime_to dt_normalized "${epoch_seconds}" || return 1
-	dt_today="$(date +%F)"
+	_bh_dt_normalize_datetime_to dt_normalized "${dt_input}" || return 1
+	_bh_dt_today_date_to dt_today || return
 
 	if [[ ${dt_normalized} == "${dt_today}"* ]]; then
-		short="${dt_normalized#"${dt_today}"}"
-		short="${short# }"
-		printf -v "${out_varname}" '%s' "${short}"
+		dt_short="${dt_normalized#"${dt_today}"}"
+		dt_short="${dt_short# }"
+		printf -v "${out_varname}" '%s' "${dt_short}"
 		return 0
 	fi
 
