@@ -78,3 +78,29 @@ str_escape_html_to() {
     # Return via output variable (no command substitution).
     printf -v "${out_varname}" '%s' "${result}"
 }
+
+##################################################
+# str_trim_to <out_varname> <input>
+#
+# Trims leading and trailing whitespace from <input>
+# and writes the result to the variable named by
+# <out_varname>.
+#
+# Returns:
+#   0 on success
+#   2 on invalid output variable name
+##################################################
+str_trim_to() {
+    local out_varname="${1}"
+    local input="${2}"
+
+    # Validate variable name before using it with printf -v.
+    bh_val_out_varname "${out_varname}" 'str_trim_to' || return
+
+    # Trim leading and trailing whitespace.
+    input="${input#"${input%%[![:space:]]*}"}"
+    input="${input%"${input##*[![:space:]]}"}"
+
+    # Return via output variable (no command substitution).
+    printf -v "${out_varname}" '%s' "${input}"
+}

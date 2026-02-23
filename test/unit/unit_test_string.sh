@@ -33,6 +33,21 @@ run_tests() {
     # validation / usage failures
     assert_rc 2 'invalid output varname rejected' str_escape_html_to '1bad' 'x'
     assert_rc 2 'usage error on missing args' str_escape_html_to out
+
+    # str_trim_to behavior
+    str_trim_to out $'  hello world  '
+    assert_eq 'hello world' "${out}" 'str_trim_to trims leading/trailing spaces'
+
+    str_trim_to out $'\t  hello\n'
+    assert_eq 'hello' "${out}" 'str_trim_to trims tabs/newlines at edges'
+
+    str_trim_to out '   '
+    assert_eq '' "${out}" 'str_trim_to returns empty on all-whitespace input'
+
+    str_trim_to out 'already_clean'
+    assert_eq 'already_clean' "${out}" 'str_trim_to keeps clean input unchanged'
+
+    assert_rc 2 'str_trim_to invalid output varname rejected' str_trim_to '1bad' 'x'
 }
 
 test_init

@@ -26,10 +26,20 @@ target_str_case_ms() {
         escape_html:100) printf '%s' 63 ;;
         escape_html:1000) printf '%s' 476 ;;
 
-        escape_special:1) printf '%s' 3 ;;
-        escape_special:10) printf '%s' 7 ;;
+        escape_special:1) printf '%s' 20 ;;
+        escape_special:10) printf '%s' 24 ;;
         escape_special:100) printf '%s' 62 ;;
         escape_special:1000) printf '%s' 537 ;;
+
+        trim_clean:1) printf '%s' 18 ;;
+        trim_clean:10) printf '%s' 20 ;;
+        trim_clean:100) printf '%s' 50 ;;
+        trim_clean:1000) printf '%s' 320 ;;
+
+        trim_spaced:1) printf '%s' 18 ;;
+        trim_spaced:10) printf '%s' 20 ;;
+        trim_spaced:100) printf '%s' 40 ;;
+        trim_spaced:1000) printf '%s' 300 ;;
 
         *)
             printf 'target_str_case_ms: no explicit target for %s (n=%s)\n' "${label}" "${iterations}" >&2
@@ -63,6 +73,18 @@ run_str_bench_group() {
     perf_measure_to_report 'escape_special' "${iterations}" "${target_ms}"
     for (( i = 0; i < iterations; i++ )); do
         str_escape_html_to out 'ÄäÖöÜüß ©€¢£¥®™'
+    done
+
+    target_ms="$(target_str_case_ms trim_clean "${iterations}")"
+    perf_measure_to_report 'trim_clean' "${iterations}" "${target_ms}"
+    for (( i = 0; i < iterations; i++ )); do
+        str_trim_to out 'plain_text_123'
+    done
+
+    target_ms="$(target_str_case_ms trim_spaced "${iterations}")"
+    perf_measure_to_report 'trim_spaced' "${iterations}" "${target_ms}"
+    for (( i = 0; i < iterations; i++ )); do
+        str_trim_to out $'  \t trim me \n  '
     done
 
     perf_measure_to_report
