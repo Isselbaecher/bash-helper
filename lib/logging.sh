@@ -193,4 +193,3 @@ log_ok_or_exit() {
 	log_error "${message} (exit_code=${exit_code})"
 	exit "${exit_code}"
 }
-

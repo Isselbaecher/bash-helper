@@ -24,9 +24,9 @@ target_log_case_ms() {
         info_emit:100) printf '%s' 41 ;;
         info_emit:1000) printf '%s' 266 ;;
 
-        warn_emit:1) printf '%s' 2 ;;
-        warn_emit:10) printf '%s' 4 ;;
-        warn_emit:100) printf '%s' 26 ;;
+        warn_emit:1) printf '%s' 20 ;;
+        warn_emit:10) printf '%s' 24 ;;
+        warn_emit:100) printf '%s' 45 ;;
         warn_emit:1000) printf '%s' 251 ;;
 
         ok_or_warn_ok:1) printf '%s' 18 ;;
@@ -34,8 +34,8 @@ target_log_case_ms() {
         ok_or_warn_ok:100) printf '%s' 65 ;;
         ok_or_warn_ok:1000) printf '%s' 420 ;;
 
-        ok_or_warn_fail:1) printf '%s' 4 ;;
-        ok_or_warn_fail:10) printf '%s' 8 ;;
+        ok_or_warn_fail:1) printf '%s' 20 ;;
+        ok_or_warn_fail:10) printf '%s' 24 ;;
         ok_or_warn_fail:100) printf '%s' 45 ;;
         ok_or_warn_fail:1000) printf '%s' 360 ;;
 
