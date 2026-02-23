@@ -125,13 +125,13 @@ perf_stop_to() {
 # OK if elapsed_ms <= target_ms, otherwise SLOW.
 ##################################################
 perf_report_header() {
-    printf '+-----------------+--------+-------------+-------------+------+'"\n"
-    printf '| %-15s | %6s | %11s | %11s | %-4s |\n' 'Case' 'N' 'Actual' 'Target' 'Stat'
-    printf '+-----------------+--------+-------------+-------------+------+'"\n"
+    printf '+-----------------------+--------+-------------+-------------+------+'"\n"
+    printf '| %-21s | %6s | %11s | %11s | %-4s |\n' 'Case' 'N' 'Actual' 'Target' 'Stat'
+    printf '+-----------------------+--------+-------------+-------------+------+'"\n"
 }
 
 perf_report_footer() {
-    printf '+-----------------+--------+-------------+-------------+------+'"\n"
+    printf '+-----------------------+--------+-------------+-------------+------+'"\n"
 }
 
 perf_report_section_header() {
@@ -141,16 +141,16 @@ perf_report_section_header() {
     fi
 
     local title="${1}"
-    local content_width=59
+    local content_width=67
     local max_title_width=$(( content_width - 2 ))
 
     if (( ${#title} > max_title_width )); then
         title="${title:0:max_title_width}"
     fi
 
-    printf '\n+=============================================================+\n'
-    printf '| %-59s |\n' "${title}"
-    printf '+=============================================================+\n'
+    printf '\n+===================================================================+\n'
+    printf '| %-65s |\n' "${title}"
+    printf '+===================================================================+\n'
 }
 
 perf_report_result() {
@@ -173,7 +173,7 @@ perf_report_result() {
         status='SLOW'
     fi
 
-    printf '| %-15s | %6d | %8d ms | %8d ms | %-4s |\n' \
+    printf '| %-21s | %6d | %8d ms | %8d ms | %-4s |\n' \
         "${label}" "${iterations}" "${elapsed_ms}" "${target_ms}" "${status}"
 }
 
@@ -217,8 +217,8 @@ perf_measure_live() {
         elapsed_sec=$(( elapsed_ms / 1000 ))
         elapsed_millis=$(( elapsed_ms % 1000 ))
 
-        # Name: truncate to 15 chars; Seconds: 4 wide; Milliseconds: 5 wide
-        printf '%-15.15s -> %4ds%5dms\n' "${_bh_perf_live_last_label}" "${elapsed_sec}" "${elapsed_millis}"
+        # Name: truncate to 21 chars; Seconds: 4 wide; Milliseconds: 5 wide
+        printf '%-21.21s -> %4ds%5dms\n' "${_bh_perf_live_last_label}" "${elapsed_sec}" "${elapsed_millis}"
     fi
 
     # Shift window forward so next call prints this section.
