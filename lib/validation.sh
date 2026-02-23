@@ -39,3 +39,31 @@ bh_val_int() {
 		return 2
 	}
 }
+
+##################################################
+# bh_check_cmd <cmd> [cmd...]
+#
+# Verifies that each command name resolves via command -v.
+# Returns 0 when all commands exist, 127 when any is missing.
+##################################################
+bh_check_cmd() {
+	local cmd
+	for cmd in "$@"; do
+		command -v -- "${cmd}" >/dev/null 2>&1 || return 127
+	done
+}
+
+##################################################
+# bh_confirm [prompt]
+#
+# Prompts the user for confirmation.
+# Accepts y/yes (case-insensitive) as confirmation.
+# Returns 0 for yes, 1 for no/empty/other input.
+##################################################
+bh_confirm() {
+	local reply
+	local prompt="${1:-Continue?} [y/N] "
+
+	read -r -p "${prompt}" reply
+	[[ ${reply} =~ ^[Yy]([eE][sS])?$ ]]
+}
