@@ -104,3 +104,182 @@ str_trim_to() {
     # Return via output variable (no command substitution).
     printf -v "${out_varname}" '%s' "${input}"
 }
+
+##################################################
+# str_starts_with <str> <prefix>
+#
+# Tests whether <str> begins with <prefix>.
+#
+# Returns:
+#   0 if <str> starts with <prefix>
+#   1 otherwise
+##################################################
+str_starts_with() {
+    local str="${1}"
+    local prefix="${2}"
+    [[ ${str} == ${prefix}* ]]
+}
+
+##################################################
+# str_ends_with <str> <suffix>
+#
+# Tests whether <str> ends with <suffix>.
+#
+# Returns:
+#   0 if <str> ends with <suffix>
+#   1 otherwise
+##################################################
+str_ends_with() {
+    local str="${1}"
+    local suffix="${2}"
+    [[ ${str} == *${suffix} ]]
+}
+
+##################################################
+# str_contains <str> <substr>
+#
+# Tests whether <str> contains <substr>.
+#
+# Returns:
+#   0 if <str> contains <substr>
+#   1 otherwise
+##################################################
+str_contains() {
+    local str="${1}"
+    local substr="${2}"
+    [[ ${str} == *${substr}* ]]
+}
+
+##################################################
+# str_strip_prefix_to <out_varname> <str> <prefix>
+#
+# Removes <prefix> from the start of <str> when present,
+# and writes the result to <out_varname>.
+#
+# Returns:
+#   0 on success
+#   2 on invalid output variable name
+##################################################
+str_strip_prefix_to() {
+    local out_varname="${1}"
+    local str="${2}"
+    local prefix="${3}"
+
+    bh_val_out_varname "${out_varname}" 'str_strip_prefix_to' || return
+
+    if [[ ${str} == ${prefix}* ]]; then
+        printf -v "${out_varname}" '%s' "${str#"${prefix}"}"
+    else
+        printf -v "${out_varname}" '%s' "${str}"
+    fi
+}
+
+##################################################
+# str_strip_suffix_to <out_varname> <str> <suffix>
+#
+# Removes <suffix> from the end of <str> when present,
+# and writes the result to <out_varname>.
+#
+# Returns:
+#   0 on success
+#   2 on invalid output variable name
+##################################################
+str_strip_suffix_to() {
+    local out_varname="${1}"
+    local str="${2}"
+    local suffix="${3}"
+
+    bh_val_out_varname "${out_varname}" 'str_strip_suffix_to' || return
+
+    if [[ ${str} == *${suffix} ]]; then
+        printf -v "${out_varname}" '%s' "${str%"${suffix}"}"
+    else
+        printf -v "${out_varname}" '%s' "${str}"
+    fi
+}
+
+##################################################
+# str_basename_to <out_varname> <path>
+#
+# Writes the basename component of <path> to <out_varname>.
+# A trailing slash is removed before extraction.
+#
+# Returns:
+#   0 on success
+#   2 on invalid output variable name
+##################################################
+str_basename_to() {
+    local out_varname="${1}"
+    local path="${2}"
+
+    bh_val_out_varname "${out_varname}" 'str_basename_to' || return
+
+    path="${path%/}" 
+
+    if [[ ${path} == */* ]]; then
+        printf -v "${out_varname}" '%s' "${path##*/}"
+    else
+        printf -v "${out_varname}" '%s' "${path}"
+    fi
+}
+
+##################################################
+# str_dirname_to <out_varname> <path>
+#
+# Writes the dirname component of <path> to <out_varname>.
+# If no slash exists in <path>, writes '.'.
+#
+# Returns:
+#   0 on success
+#   2 on invalid output variable name
+##################################################
+str_dirname_to() {
+    local out_varname="${1}"
+    local path="${2}"
+
+    bh_val_out_varname "${out_varname}" 'str_dirname_to' || return
+
+    if [[ ${path} == */* ]]; then
+        printf -v "${out_varname}" '%s' "${path%/*}"
+    else
+        printf -v "${out_varname}" '%s' '.'
+    fi
+}
+
+##################################################
+# str_normalize_whitespace_to <out_varname> <input>
+#
+# Normalizes whitespace in <input> by converting any
+# whitespace characters to spaces, collapsing repeated
+# spaces to one, and trimming leading/trailing whitespace.
+# Writes result to <out_varname>.
+#
+# Returns:
+#   0 on success
+#   2 on invalid arguments or invalid output variable name
+##################################################
+str_normalize_whitespace_to() {
+    if (( $# != 2 )); then
+        printf 'usage: str_normalize_whitespace_to <out_varname> <input>\n' >&2
+        return 2
+    fi
+
+    local out_varname="${1}"
+    local input="${2}"
+
+    bh_val_out_varname "${out_varname}" 'str_normalize_whitespace_to' || return
+
+    # Convert any whitespace character to a plain space.
+    input="${input//[[:space:]]/ }"
+
+    # Collapse repeated spaces to a single space.
+    while [[ ${input} == *'  '* ]]; do
+        input="${input//  / }"
+    done
+
+    # Trim leading and trailing whitespace.
+    input="${input#"${input%%[![:space:]]*}"}"
+    input="${input%"${input##*[![:space:]]}"}"
+
+    printf -v "${out_varname}" '%s' "${input}"
+}
