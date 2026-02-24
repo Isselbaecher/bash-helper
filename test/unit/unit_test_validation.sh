@@ -9,6 +9,51 @@ source "${repo_root}/test/assert.sh"
 # shellcheck disable=SC1091
 source "${repo_root}/lib/validation.sh"
 
+_test_bh_is_set_set_nonempty() {
+    local _t_var='x'
+    bh_is_set _t_var
+}
+
+_test_bh_is_set_set_empty() {
+    local _t_var=''
+    bh_is_set _t_var
+}
+
+_test_bh_is_set_unset() {
+    unset _t_var
+    bh_is_set _t_var
+}
+
+_test_bh_require_var_set_nonempty() {
+    local _t_var='x'
+    bh_require_var _t_var
+}
+
+_test_bh_require_var_set_empty() {
+    local _t_var=''
+    bh_require_var _t_var
+}
+
+_test_bh_require_var_unset() {
+    unset _t_var
+    bh_require_var _t_var
+}
+
+_test_bh_require_nonempty_var_set_nonempty() {
+    local _t_var='x'
+    bh_require_nonempty_var _t_var
+}
+
+_test_bh_require_nonempty_var_set_empty() {
+    local _t_var=''
+    bh_require_nonempty_var _t_var
+}
+
+_test_bh_require_nonempty_var_unset() {
+    unset _t_var
+    bh_require_nonempty_var _t_var
+}
+
 run_tests() {
     local rc
 
@@ -54,6 +99,27 @@ run_tests() {
     bh_confirm 'Continue?' <<< ''
     rc=$?
     assert_eq '1' "${rc}" 'bh_confirm rejects empty input'
+
+    # bh_is_set
+    assert_rc 0 'bh_is_set: set non-empty var' _test_bh_is_set_set_nonempty
+    assert_rc 0 'bh_is_set: set empty var' _test_bh_is_set_set_empty
+    assert_rc 1 'bh_is_set: unset var' _test_bh_is_set_unset
+    assert_rc 2 'bh_is_set: invalid varname rejected' bh_is_set '1bad'
+    assert_rc 2 'bh_is_set: usage error missing arg' bh_is_set
+
+    # bh_require_var
+    assert_rc 0 'bh_require_var: set non-empty var' _test_bh_require_var_set_nonempty
+    assert_rc 0 'bh_require_var: set empty var allowed' _test_bh_require_var_set_empty
+    assert_rc 2 'bh_require_var: unset var rejected' _test_bh_require_var_unset
+    assert_rc 2 'bh_require_var: invalid varname rejected' bh_require_var '1bad'
+    assert_rc 2 'bh_require_var: usage error missing arg' bh_require_var
+
+    # bh_require_nonempty_var
+    assert_rc 0 'bh_require_nonempty_var: set non-empty var' _test_bh_require_nonempty_var_set_nonempty
+    assert_rc 2 'bh_require_nonempty_var: set empty var rejected' _test_bh_require_nonempty_var_set_empty
+    assert_rc 2 'bh_require_nonempty_var: unset var rejected' _test_bh_require_nonempty_var_unset
+    assert_rc 2 'bh_require_nonempty_var: invalid varname rejected' bh_require_nonempty_var '1bad'
+    assert_rc 2 'bh_require_nonempty_var: usage error missing arg' bh_require_nonempty_var
 }
 
 test_init

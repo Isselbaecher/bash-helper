@@ -54,6 +54,31 @@ target_val_case_ms() {
         confirm_no:100) printf '%s' 170 ;;
         confirm_no:1000) printf '%s' 1450 ;;
 
+        is_set_hit:1) printf '%s' 20 ;;
+        is_set_hit:10) printf '%s' 25 ;;
+        is_set_hit:100) printf '%s' 45 ;;
+        is_set_hit:1000) printf '%s' 280 ;;
+
+        is_set_miss:1) printf '%s' 20 ;;
+        is_set_miss:10) printf '%s' 25 ;;
+        is_set_miss:100) printf '%s' 45 ;;
+        is_set_miss:1000) printf '%s' 280 ;;
+
+        require_var_hit:1) printf '%s' 20 ;;
+        require_var_hit:10) printf '%s' 30 ;;
+        require_var_hit:100) printf '%s' 75 ;;
+        require_var_hit:1000) printf '%s' 500 ;;
+
+        require_nonempty_hit:1) printf '%s' 20 ;;
+        require_nonempty_hit:10) printf '%s' 30 ;;
+        require_nonempty_hit:100) printf '%s' 75 ;;
+        require_nonempty_hit:1000) printf '%s' 500 ;;
+
+        require_nonempty_miss:1) printf '%s' 30 ;;
+        require_nonempty_miss:10) printf '%s' 45 ;;
+        require_nonempty_miss:100) printf '%s' 200 ;;
+        require_nonempty_miss:1000) printf '%s' 1800 ;;
+
         *)
             printf 'target_val_case_ms: no explicit target for %s (n=%s)\n' "${label}" "${iterations}" >&2
             return 2
@@ -65,6 +90,10 @@ run_validation_bench_group() {
     local iterations="${1}"
     local i
     local target_ms
+    # shellcheck disable=SC2034
+    local set_var='value'
+    # shellcheck disable=SC2034
+    local empty_var=''
 
     perf_report_section_header "validation benchmark: ${iterations} iterations"
     perf_measure_to_report_reset
@@ -115,6 +144,36 @@ run_validation_bench_group() {
     perf_measure_to_report 'confirm_no' "${iterations}" "${target_ms}"
     for (( i = 0; i < iterations; i++ )); do
         bh_confirm '' <<< 'n' >/dev/null 2>&1 || true
+    done
+
+    target_ms="$(target_val_case_ms is_set_hit "${iterations}")"
+    perf_measure_to_report 'is_set_hit' "${iterations}" "${target_ms}"
+    for (( i = 0; i < iterations; i++ )); do
+        bh_is_set set_var >/dev/null 2>&1
+    done
+
+    target_ms="$(target_val_case_ms is_set_miss "${iterations}")"
+    perf_measure_to_report 'is_set_miss' "${iterations}" "${target_ms}"
+    for (( i = 0; i < iterations; i++ )); do
+        bh_is_set unset_var >/dev/null 2>&1 || true
+    done
+
+    target_ms="$(target_val_case_ms require_var_hit "${iterations}")"
+    perf_measure_to_report 'require_var_hit' "${iterations}" "${target_ms}"
+    for (( i = 0; i < iterations; i++ )); do
+        bh_require_var set_var >/dev/null 2>&1
+    done
+
+    target_ms="$(target_val_case_ms require_nonempty_hit "${iterations}")"
+    perf_measure_to_report 'require_nonempty_hit' "${iterations}" "${target_ms}"
+    for (( i = 0; i < iterations; i++ )); do
+        bh_require_nonempty_var set_var >/dev/null 2>&1
+    done
+
+    target_ms="$(target_val_case_ms require_nonempty_miss "${iterations}")"
+    perf_measure_to_report 'require_nonempty_miss' "${iterations}" "${target_ms}"
+    for (( i = 0; i < iterations; i++ )); do
+        bh_require_nonempty_var empty_var >/dev/null 2>&1 || true
     done
 
     perf_measure_to_report
