@@ -139,3 +139,147 @@ bh_require_nonempty_var() {
 	fi
 }
 
+_bh_require_path_kind() {
+	if (( $# != 3 )); then
+		printf 'usage: _bh_require_path_kind <kind> <path> <func_name>\n' >&2
+		return 2
+	fi
+
+	local kind="${1}"
+	local path="${2}"
+	local func_name="${3}"
+
+	if [[ -z "${path}" ]]; then
+		printf '%s: path must not be empty\n' "${func_name}" >&2
+		return 2
+	fi
+
+	case "${kind}" in
+		file)
+			[[ -f "${path}" ]] || {
+				printf '%s: required regular file not found: %q\n' "${func_name}" "${path}" >&2
+				return 2
+			}
+			;;
+		dir)
+			[[ -d "${path}" ]] || {
+				printf '%s: required directory not found: %q\n' "${func_name}" "${path}" >&2
+				return 2
+			}
+			;;
+		readable)
+			[[ -r "${path}" ]] || {
+				printf '%s: required readable path not found/access denied: %q\n' "${func_name}" "${path}" >&2
+				return 2
+			}
+			;;
+		writable)
+			[[ -w "${path}" ]] || {
+				printf '%s: required writable path not found/access denied: %q\n' "${func_name}" "${path}" >&2
+				return 2
+			}
+			;;
+		executable)
+			[[ -x "${path}" ]] || {
+				printf '%s: required executable path not found/access denied: %q\n' "${func_name}" "${path}" >&2
+				return 2
+			}
+			;;
+		*)
+			printf '_bh_require_path_kind: invalid kind: %q\n' "${kind}" >&2
+			return 2
+			;;
+	esac
+}
+
+##################################################
+# bh_require_file <path>
+#
+# Ensures <path> exists and is a regular file.
+#
+# Returns:
+#   0 if path is a regular file
+#   2 otherwise (or invalid args)
+##################################################
+bh_require_file() {
+	if (( $# != 1 )); then
+		printf 'usage: bh_require_file <path>\n' >&2
+		return 2
+	fi
+
+	_bh_require_path_kind file "${1}" 'bh_require_file'
+}
+
+##################################################
+# bh_require_dir <path>
+#
+# Ensures <path> exists and is a directory.
+#
+# Returns:
+#   0 if path is a directory
+#   2 otherwise (or invalid args)
+##################################################
+bh_require_dir() {
+	if (( $# != 1 )); then
+		printf 'usage: bh_require_dir <path>\n' >&2
+		return 2
+	fi
+
+	_bh_require_path_kind dir "${1}" 'bh_require_dir'
+}
+
+##################################################
+# bh_require_readable <path>
+#
+# Ensures <path> is readable by the current user.
+#
+# Returns:
+#   0 if path is readable
+#   2 otherwise (or invalid args)
+##################################################
+bh_require_readable() {
+	if (( $# != 1 )); then
+		printf 'usage: bh_require_readable <path>\n' >&2
+		return 2
+	fi
+
+	_bh_require_path_kind readable "${1}" 'bh_require_readable'
+}
+
+##################################################
+# bh_require_writable <path>
+#
+# Ensures <path> is writable by the current user.
+#
+# Returns:
+#   0 if path is writable
+#   2 otherwise (or invalid args)
+##################################################
+bh_require_writable() {
+	if (( $# != 1 )); then
+		printf 'usage: bh_require_writable <path>\n' >&2
+		return 2
+	fi
+
+	_bh_require_path_kind writable "${1}" 'bh_require_writable'
+}
+
+##################################################
+# bh_require_executable <path>
+#
+# Ensures <path> is executable by the current user.
+#
+# Returns:
+#   0 if path is executable
+#   2 otherwise (or invalid args)
+##################################################
+bh_require_executable() {
+	if (( $# != 1 )); then
+		printf 'usage: bh_require_executable <path>\n' >&2
+		return 2
+	fi
+
+	_bh_require_path_kind executable "${1}" 'bh_require_executable'
+}
+
+# Requrie parent dir writeable

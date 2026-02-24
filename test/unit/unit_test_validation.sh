@@ -54,8 +54,62 @@ _test_bh_require_nonempty_var_unset() {
     bh_require_nonempty_var _t_var
 }
 
+_test_val_tmp_dir=''
+_test_val_tmp_file=''
+_test_val_missing_path=''
+_test_val_exec_path=''
+
+_test_bh_require_file_ok() {
+    bh_require_file "${_test_val_tmp_file}"
+}
+
+_test_bh_require_file_fail_dir() {
+    bh_require_file "${_test_val_tmp_dir}"
+}
+
+_test_bh_require_dir_ok() {
+    bh_require_dir "${_test_val_tmp_dir}"
+}
+
+_test_bh_require_dir_fail_file() {
+    bh_require_dir "${_test_val_tmp_file}"
+}
+
+_test_bh_require_readable_ok() {
+    bh_require_readable "${_test_val_tmp_file}"
+}
+
+_test_bh_require_readable_fail_missing() {
+    bh_require_readable "${_test_val_missing_path}"
+}
+
+_test_bh_require_writable_ok() {
+    bh_require_writable "${_test_val_tmp_file}"
+}
+
+_test_bh_require_writable_fail_missing() {
+    bh_require_writable "${_test_val_missing_path}"
+}
+
+_test_bh_require_executable_ok() {
+    bh_require_executable "${_test_val_exec_path}"
+}
+
+_test_bh_require_executable_fail_nonexec() {
+    bh_require_executable "${_test_val_tmp_file}"
+}
+
 run_tests() {
     local rc
+
+    _test_val_tmp_dir="${repo_root}/test/.tmp_validation_${$}"
+    _test_val_tmp_file="${_test_val_tmp_dir}/sample.txt"
+    _test_val_missing_path="${_test_val_tmp_dir}/missing"
+    _test_val_exec_path="$(command -v bash)"
+
+    mkdir -p "${_test_val_tmp_dir}"
+    printf 'x\n' > "${_test_val_tmp_file}"
+    chmod 0644 "${_test_val_tmp_file}" 2>/dev/null || true
 
     # bh_val_out_varname success cases
     assert_rc 0 'valid var: simple' bh_val_out_varname 'abc'
@@ -120,6 +174,31 @@ run_tests() {
     assert_rc 2 'bh_require_nonempty_var: unset var rejected' _test_bh_require_nonempty_var_unset
     assert_rc 2 'bh_require_nonempty_var: invalid varname rejected' bh_require_nonempty_var '1bad'
     assert_rc 2 'bh_require_nonempty_var: usage error missing arg' bh_require_nonempty_var
+
+    # bh_require_file / bh_require_dir
+    assert_rc 0 'bh_require_file: existing file accepted' _test_bh_require_file_ok
+    assert_rc 2 'bh_require_file: directory rejected' _test_bh_require_file_fail_dir
+    assert_rc 2 'bh_require_file: usage error missing arg' bh_require_file
+
+    assert_rc 0 'bh_require_dir: existing directory accepted' _test_bh_require_dir_ok
+    assert_rc 2 'bh_require_dir: file rejected' _test_bh_require_dir_fail_file
+    assert_rc 2 'bh_require_dir: usage error missing arg' bh_require_dir
+
+    # bh_require_readable / bh_require_writable
+    assert_rc 0 'bh_require_readable: readable path accepted' _test_bh_require_readable_ok
+    assert_rc 2 'bh_require_readable: missing path rejected' _test_bh_require_readable_fail_missing
+    assert_rc 2 'bh_require_readable: usage error missing arg' bh_require_readable
+
+    assert_rc 0 'bh_require_writable: writable path accepted' _test_bh_require_writable_ok
+    assert_rc 2 'bh_require_writable: missing path rejected' _test_bh_require_writable_fail_missing
+    assert_rc 2 'bh_require_writable: usage error missing arg' bh_require_writable
+
+    # bh_require_executable
+    assert_rc 0 'bh_require_executable: executable path accepted' _test_bh_require_executable_ok
+    assert_rc 2 'bh_require_executable: non-executable file rejected' _test_bh_require_executable_fail_nonexec
+    assert_rc 2 'bh_require_executable: usage error missing arg' bh_require_executable
+
+    rm -rf "${_test_val_tmp_dir}"
 }
 
 test_init
