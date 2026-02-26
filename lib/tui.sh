@@ -9,7 +9,7 @@ if ! declare -F bh_val_out_varname >/dev/null 2>&1; then
 fi
 
 ##################################################
-# tui_select_1n_to <out_varname> <prompt> <option...>
+# tui_select_list_to <out_varname> <prompt> <option...>
 #
 # Shows a numbered menu (1..n), repeatedly prompts until
 # a valid selection is entered, and writes the selected
@@ -24,9 +24,9 @@ fi
 #   2 on usage errors, invalid output variable name,
 #     or input read failure (e.g., EOF)
 ##################################################
-tui_select_1n_to() {
+tui_select_list_to() {
 	if (( $# < 3 )); then
-		printf 'usage: tui_select_1n_to <out_varname> <prompt> <option...>\n' >&2
+		printf 'usage: tui_select_list_to <out_varname> <prompt> <option...>\n' >&2
 		return 2
 	fi
 
@@ -34,7 +34,7 @@ tui_select_1n_to() {
 	local prompt="${2}"
 	shift 2
 
-	bh_val_out_varname "${out_varname}" 'tui_select_1n_to' || return
+	bh_val_out_varname "${out_varname}" 'tui_select_list_to' || return
 
 	local -a options=("$@")
 	local option_count="${#options[@]}"
@@ -51,7 +51,7 @@ tui_select_1n_to() {
 	while :; do
 		printf '  > Enter choice [1-%d]: ' "${option_count}" >&2
 		if ! read -r choice; then
-			printf 'tui_select_1n_to: failed to read user input\n' >&2
+			printf 'tui_select_list_to: failed to read user input\n' >&2
 			return 2
 		fi
 

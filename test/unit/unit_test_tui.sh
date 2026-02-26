@@ -18,7 +18,7 @@ run_tests() {
 	err_file="$(mktemp)"
 
 	selected=''
-	tui_select_1n_to selected 'Pick one:' 'Alpha' 'Beta' 'Gamma' <<< '2' 2>"${err_file}" >/dev/null
+	tui_select_list_to selected 'Pick one:' 'Alpha' 'Beta' 'Gamma' <<< '2' 2>"${err_file}" >/dev/null
 	err="$(<"${err_file}")"
 	assert_match '\+-- Pick one:' "${err}" 'prints pretty menu header'
 	assert_match 'Pick one:' "${err}" 'prints prompt header'
@@ -28,14 +28,14 @@ run_tests() {
 	assert_eq 'Beta' "${selected}" 'assigns selected option to output variable'
 
 	selected=''
-	tui_select_1n_to selected 'Pick one:' 'Alpha' 'Beta' 'Gamma' <<< $'x\n3' 2>"${err_file}" >/dev/null
+	tui_select_list_to selected 'Pick one:' 'Alpha' 'Beta' 'Gamma' <<< $'x\n3' 2>"${err_file}" >/dev/null
 	err="$(<"${err_file}")"
 	assert_match 'ERROR: Invalid selection:' "${err}" 'prints validation error for invalid selection'
 	assert_match 'OK: Selected: Gamma' "${err}" 'prints chosen value after retry success'
 	assert_eq 'Gamma' "${selected}" 're-prompts until valid selection'
 
-	assert_rc 2 'rejects invalid output varname' tui_select_1n_to '1bad' 'Pick one:' 'A'
-	assert_rc 2 'requires at least one option' tui_select_1n_to out 'Pick one:'
+	assert_rc 2 'rejects invalid output varname' tui_select_list_to '1bad' 'Pick one:' 'A'
+	assert_rc 2 'requires at least one option' tui_select_list_to out 'Pick one:'
 
 	selected=''
 	assert_rc 2 'returns 2 on read failure (EOF)' bash -c '
@@ -46,7 +46,7 @@ run_tests() {
 		# shellcheck disable=SC1091
 		source "${repo_root}/lib/tui.sh"
 		selected=""
-		tui_select_1n_to selected "Pick one:" "A" "B" < /dev/null
+		tui_select_list_to selected "Pick one:" "A" "B" < /dev/null
 	' _ "${repo_root}"
 
 	rm -f "${err_file}"
