@@ -64,3 +64,98 @@ tui_select_list_to() {
 		printf '  ERROR: Invalid selection: %q (expected 1-%d)\n' "${choice}" "${option_count}" >&2
 	done
 }
+
+##################################################
+# tui_input_to <out_varname> <prompt> [default_value]
+#
+# Prompts once for input and writes the entered value to
+# <out_varname>. If [default_value] is provided and the
+# user submits an empty input, default_value is used.
+#
+# I/O:
+#   - Prompt is written to stderr.
+#   - Input is read from stdin.
+#
+# Returns:
+#   0 on success
+#   2 on usage errors, invalid output variable name,
+#     or input read failure (e.g., EOF)
+##################################################
+tui_input_to() {
+	if (( $# < 2 || $# > 3 )); then
+		printf 'usage: tui_input_to <out_varname> <prompt> [default_value]\n' >&2
+		return 2
+	fi
+
+	local out_varname="${1}"
+	local prompt="${2}"
+	local default_value="${3-}"
+	local input
+
+	bh_val_out_varname "${out_varname}" 'tui_input_to' || return
+
+	if (( $# == 3 )); then
+		printf '%s [%s]: ' "${prompt}" "${default_value}" >&2
+	else
+		printf '%s: ' "${prompt}" >&2
+	fi
+
+	if ! read -r input; then
+		printf 'tui_input_to: failed to read user input\n' >&2
+		return 2
+	fi
+
+	if [[ -z "${input}" && $# == 3 ]]; then
+		input="${default_value}"
+	fi
+
+	printf -v "${out_varname}" '%s' "${input}"
+}
+
+##################################################
+# tui_secret_to <out_varname> <prompt> [default_value]
+#
+# Prompts once for hidden input and writes the entered
+# secret value to <out_varname>. If [default_value] is
+# provided and input is empty, default_value is used.
+#
+# I/O:
+#   - Prompt is written to stderr.
+#   - Input is read from stdin without terminal echo.
+#
+# Returns:
+#   0 on success
+#   2 on usage errors, invalid output variable name,
+#     or input read failure (e.g., EOF)
+##################################################
+tui_secret_to() {
+	if (( $# < 2 || $# > 3 )); then
+		printf 'usage: tui_secret_to <out_varname> <prompt> [default_value]\n' >&2
+		return 2
+	fi
+
+	local out_varname="${1}"
+	local prompt="${2}"
+	local default_value="${3-}"
+	local input
+
+	bh_val_out_varname "${out_varname}" 'tui_secret_to' || return
+
+	if (( $# == 3 )); then
+		printf '%s [hidden, default set]: ' "${prompt}" >&2
+	else
+		printf '%s: ' "${prompt}" >&2
+	fi
+
+	if ! read -r -s input; then
+		printf '\ntui_secret_to: failed to read user input\n' >&2
+		return 2
+	fi
+	printf '\n' >&2
+
+	if [[ -z "${input}" && $# == 3 ]]; then
+		input="${default_value}"
+	fi
+
+	printf -v "${out_varname}" '%s' "${input}"
+}

@@ -49,6 +49,58 @@ run_tests() {
 		tui_select_list_to selected "Pick one:" "A" "B" < /dev/null
 	' _ "${repo_root}"
 
+	# tui_input_to
+	local input_value=''
+	tui_input_to input_value 'Your name' <<< 'Lukas' 2>"${err_file}" >/dev/null
+	err="$(<"${err_file}")"
+	assert_match 'Your name:' "${err}" 'tui_input_to prints prompt'
+	assert_eq 'Lukas' "${input_value}" 'tui_input_to stores provided value'
+
+	input_value=''
+	tui_input_to input_value 'Environment' 'dev' <<< '' 2>"${err_file}" >/dev/null
+	err="$(<"${err_file}")"
+	assert_match 'Environment \[dev\]:' "${err}" 'tui_input_to prints prompt with default'
+	assert_eq 'dev' "${input_value}" 'tui_input_to applies default on empty input'
+
+	assert_rc 2 'tui_input_to rejects invalid output varname' tui_input_to '1bad' 'Prompt'
+	assert_rc 2 'tui_input_to usage error on missing args' tui_input_to out
+	assert_rc 2 'tui_input_to returns 2 on EOF' bash -c '
+		set -u
+		repo_root="$1"
+		# shellcheck disable=SC1091
+		source "${repo_root}/lib/validation.sh"
+		# shellcheck disable=SC1091
+		source "${repo_root}/lib/tui.sh"
+		val=""
+		tui_input_to val "Prompt" < /dev/null
+	' _ "${repo_root}"
+
+	# tui_secret_to
+	local secret=''
+	tui_secret_to secret 'Token' <<< 'super-secret' 2>"${err_file}" >/dev/null
+	err="$(<"${err_file}")"
+	assert_match 'Token:' "${err}" 'tui_secret_to prints prompt'
+	assert_eq 'super-secret' "${secret}" 'tui_secret_to stores secret value'
+
+	secret=''
+	tui_secret_to secret 'Token' 'fallback-token' <<< '' 2>"${err_file}" >/dev/null
+	err="$(<"${err_file}")"
+	assert_match 'Token \[hidden, default set\]:' "${err}" 'tui_secret_to prints prompt with default indicator'
+	assert_eq 'fallback-token' "${secret}" 'tui_secret_to applies default on empty input'
+
+	assert_rc 2 'tui_secret_to rejects invalid output varname' tui_secret_to '1bad' 'Token'
+	assert_rc 2 'tui_secret_to usage error on missing args' tui_secret_to out
+	assert_rc 2 'tui_secret_to returns 2 on EOF' bash -c '
+		set -u
+		repo_root="$1"
+		# shellcheck disable=SC1091
+		source "${repo_root}/lib/validation.sh"
+		# shellcheck disable=SC1091
+		source "${repo_root}/lib/tui.sh"
+		val=""
+		tui_secret_to val "Token" < /dev/null
+	' _ "${repo_root}"
+
 	rm -f "${err_file}"
 }
 
